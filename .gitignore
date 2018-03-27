@@ -1,8 +1,9 @@
 # Built application files
 *.apk
 *.ap_
+*.cer
 
-# Files for the ART/Dalvik VM
+# Files for the Dalvik VM
 *.dex
 
 # Java class files
@@ -16,6 +17,7 @@ out/
 # Gradle files
 .gradle/
 build/
+/*/build/
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -35,21 +37,67 @@ captures/
 # Intellij
 *.iml
 .idea/workspace.xml
-.idea/tasks.xml
-.idea/gradle.xml
-.idea/dictionaries
-.idea/libraries
 
 # Keystore files
 *.jks
 
-# External native build folder generated in Android Studio 2.2 and later
-.externalNativeBuild
+# RN generated folder
+node_modules/
+.idea/
+.vscode/
+patchtask/
 
-# Google Services (e.g. APIs or Firebase)
-google-services.json
+# dat Files
+*.apk
+*.dex
+*.class
+*.iml
 
-# Freeline
-freeline.py
-freeline/
-freeline_project_description.json
+#Android generated
+bin
+gen
+
+#Eclipse
+.project
+.classpath
+.settings
+
+#IntelliJ IDEA
+.idea
+*.iml
+*.ipr
+*.iws
+out
+
+#Maven
+target
+release.properties
+pom.xml.*
+
+#Ant
+build.xml
+local.properties
+proguard.cfg
+
+#OSX
+.DS_Store
+
+# Win32 Engine Files
+*.o
+*.d
+*.o
+*.idb
+*.pdb
+#*.obj
+*.htm
+*.ncb
+*.suo
+*.ilk
+*.dep
+*.dep
+*.ilk
+*.suo
+*.user
+*.suo
+
+
