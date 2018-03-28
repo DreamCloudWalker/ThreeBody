@@ -1,4 +1,4 @@
-package com.dengjian.threebody;
+package com.dengjian.threebody.util;
 
 import android.content.Context;
 import android.opengl.GLES20;
@@ -10,7 +10,6 @@ import java.io.InputStream;
 /**
  * Created by dengjian697 on 18/3/16.
  */
-
 public class ShaderUtil {
     public static final String TAG = ShaderUtil.class.getSimpleName();
 
