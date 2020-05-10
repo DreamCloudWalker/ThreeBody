@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>ThreeBody</title>
+        <script src="js/public/three/three.js" data-ke-src="public/three/three.js"></script>
+        <script src="js/public/three/stats.min.js"></script>
+        <script src="js/public/three/OrbitControls.js"></script>
+        <script src="js/public/three/ammo.js"></script>
+        <script src="js/public/three/physi.js"></script>
+        <script src="js/public/three/physijs_worker.js"></script>
+        <script src="js/public/libs/jquery-1.12.4.min.js"></script>
+        <script src="js/public/libs/jquery.cookie.js"></script>
+        <script src="js/public/libs/inflate.min.js"></script>
+        <script src="js/public/libs/simplex-noise.js"></script>
+        <script src="js/public/libs/tween.js"></script>
+
+        <style type="text/css">
+            div#canvas-frame {
+                border: none;
+                cursor: pointer;
+                width: 100%;
+                height: 100%;
+                background-color: #EEEEEE;
+            }
+        </style>
+        <script src="js/Aster.js"></script>
+        <script src="js/GLScene.js"></script>
+        <script src="js/AsterFactory.js"></script>
+        <script src="js/Universe.js"></script>
+        <script src="js/Utils.js"></script>
+        <script src="js/DataLoader.js"></script>
+        <script src="js/threebody.js"></script>
+    </head>
+
+    <body onload="main();" onkeypress="onKeyPress(event)">
+        <div id="canvas-frame"></div>
+    </body>
+</html>
