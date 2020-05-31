@@ -1,4 +1,6 @@
 var GLScene = function() {
+    this.DISTANCE_BUFFER = 1000;
+    this.FOV = 45;
     var mScene = this;
     this.mRenderer = new THREE.WebGLRenderer({
         antialias : true
@@ -11,6 +13,13 @@ var GLScene = function() {
     this.mStats.domElement.style.position = 'absolute';
     this.mStats.domElement.style.left = '5px';
     this.mStats.domElement.style.top = '5px';
+
+    this.mMeshGrid = new THREE.Geometry();
+    this.mMeshLineMaterial = new THREE.LineBasicMaterial({color: 0xffffff, opacity: 0.2});
+    this.mMeshLineMaterial.visible = false;
+
+    this.mAxis = new THREE.AxesHelper(500);
+    this.mAxis.material.visible = false;
 
     this.mTextureLoader = new THREE.TextureLoader();
 
@@ -25,16 +34,17 @@ var GLScene = function() {
     
     this.createCamera();
     this.createLights();
-    this.createBackground();
+    this.createAssists();
+    this.createGalaxyBackground(20000, 64);
     this.mPhysicsScene.simulate();
     this.render(this.render, this.mRenderer, this.mCamera, this.mPhysicsScene, this.mStats);
 }
 
 GLScene.prototype.createCamera = function() {
-    this.mCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 100000);
-    this.mCamera.position.x = 1000;
-    this.mCamera.position.y = 2100;
-    this.mCamera.position.z = -200;
+    this.mCamera = new THREE.PerspectiveCamera(this.FOV, window.innerWidth / window.innerHeight, 1, 100000);
+    this.mCamera.position.x = -1800;
+    this.mCamera.position.y = 850;
+    this.mCamera.position.z = -1300;
     this.mCamera.up.x = 0;
     this.mCamera.up.y = 1;
     this.mCamera.up.z = 0;
@@ -47,37 +57,35 @@ GLScene.prototype.createLights = function() {
     this.mPhysicsScene.add(this.mAmbientLight);
 }
 
-GLScene.prototype.createBackground = function() {
-    // 创建一个圆形的材质，记得一定要加上texture.needsUpdate = true;
-    let canvas = document.createElement("canvas");
-    canvas.width = 64;
-    canvas.height = 64;
+GLScene.prototype.createGalaxyBackground = function(radius, segments) {
+    this.mBgGalaxy = new THREE.Mesh(new THREE.SphereGeometry(radius, segments, segments), new THREE.MeshBasicMaterial({
+        map: THREE.ImageUtils.loadTexture('./model/Galaxy/bg_galaxy.jpg'),
+        side: THREE.BackSide
+    }));
 
-    let context = canvas.getContext("2d");
-    context.fillStyle = "#aaaaaa";
+    this.mPhysicsScene.add(this.mBgGalaxy);
+}
 
-    // canvas创建圆 http://www.w3school.com.cn/tags/canvas_arc.asp
-    context.arc(32, 32, 25, 0, 2 * Math.PI);
-    context.fill();
+GLScene.prototype.createAssists = function() {
+    this.mMeshGrid.vertices.push(new THREE.Vector3(-500, 0, 0));
+    this.mMeshGrid.vertices.push(new THREE.Vector3( 500, 0, 0));
+    for (var i = 0; i <= 10; i ++) {
+        var line = new THREE.Line(this.mMeshGrid, this.mMeshLineMaterial);
+        line.position.z = (i * 100) - 500;
+        this.mPhysicsScene.add(line);
 
-    // 创建材质
-    let texture = new THREE.Texture(canvas);
-    texture.needsUpdate = true;
-    var starsGeometry = new THREE.Geometry();
-
-    for ( var i = 0; i < 500000; i ++ ) {
-        var star = new THREE.Vector3();
-        star.x = getNumberInNormalDistribution(-3100,1000);
-        star.y = getNumberInNormalDistribution(0,5000);
-        star.z = getNumberInNormalDistribution(0,10000);
-
-        starsGeometry.vertices.push(star);
+        var line = new THREE.Line(this.mMeshGrid, this.mMeshLineMaterial);
+        line.position.x = (i * 100) - 500;
+        line.rotation.y = 90 * Math.PI / 180;
+        this.mPhysicsScene.add(line);
     }
 
-    var starsMaterial = new THREE.PointsMaterial({color: 0xffffaa, size:20, map:texture, blending: THREE.AdditiveBlending, transparent: true});
-    var starField = new THREE.Points(starsGeometry, starsMaterial);
+    this.mPhysicsScene.add(this.mAxis);
+}
 
-    this.mPhysicsScene.add(starField);
+GLScene.prototype.updateAssistVisible = function(visible) {
+    this.mAxis.material.visible = visible;
+    this.mMeshLineMaterial.visible = visible;
 }
 
 GLScene.prototype.render = function(fun, renderer, camera, scene, stats) {
@@ -93,7 +101,9 @@ GLScene.prototype.addObject = function(object) {
     if (undefined != object.mPointLight) 
         this.mPhysicsScene.add(object.mPointLight);
     if (undefined != object.mLightSprite) 
-        this.mPhysicsScene.add(object.mLightSprite)
+        this.mPhysicsScene.add(object.mLightSprite);
+    // if (undefined != object.mTrackLine) 
+    //     this.mPhysicsScene.add(object.mTrackLine);
     mUniverse.addObject(object)
 }
 
@@ -121,11 +131,44 @@ GLScene.prototype.onUpdate = function(debug) {
     if (!mUniverse.mRunning) {
         return ;
     }
+    var maxX = -Number.MAX_SAFE_INTEGER;
+    var maxY = -Number.MAX_SAFE_INTEGER;
+    var maxZ = -Number.MAX_SAFE_INTEGER;
+    var minX = Number.MAX_SAFE_INTEGER;
+    var minY = Number.MAX_SAFE_INTEGER;
+    var minZ = Number.MAX_SAFE_INTEGER;
     for (var i = 0; i < mUniverse.mObjects.length; i++) {
         if (mUniverse.mObjects[i].update != undefined) {
             mUniverse.mObjects[i].update();
         }
+        maxX = Math.max(maxX, mUniverse.mObjects[i].mMesh.position.x);
+        maxY = Math.max(maxY, mUniverse.mObjects[i].mMesh.position.y);
+        maxZ = Math.max(maxZ, mUniverse.mObjects[i].mMesh.position.z);
+        minX = Math.min(minX, mUniverse.mObjects[i].mMesh.position.x);
+        minY = Math.min(minY, mUniverse.mObjects[i].mMesh.position.y);
+        minZ = Math.min(minZ, mUniverse.mObjects[i].mMesh.position.z);
     }
+
+    var deltaX = maxX - minX;
+    var deltaY = maxY - minY;
+    var deltaZ = maxZ - minZ;
+    var maxDelta = Math.max(deltaX, Math.max(deltaY, deltaZ));
+    var cameraX = (maxX + minX) / 2;
+    var cameraY = (maxY + minY) / 2;
+    var cameraZ = (maxZ + minZ) / 2;
+    this.mCamera.lookAt(cameraX, cameraY, cameraZ);
+    if (deltaX < deltaY && deltaX < deltaZ) {   // Camera改变x坐标，观察Y-Z平面
+        cameraX = (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
+    } else if (deltaY < deltaX && deltaY < deltaZ) {
+        cameraY = (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
+    } else {
+        cameraZ = (this.DISTANCE_BUFFER + maxDelta / 2) / Math.tan(this.FOV / 2);
+    }
+
+    this.mCamera.position.x = cameraX;
+    this.mCamera.position.y = cameraY;
+    this.mCamera.position.z = -cameraZ;
+
     mUniverse.mUniverseTime++;
     if (debug) {
         console.log(getTimeWithNum(mUniverse.mUniverseTime));

@@ -3,7 +3,7 @@ function Universe() {
 	this.mScene = new GLScene();
 	this.mUniverseTime = 0;
 	this.mRunning = true;
-	this.G = 66725.9;
+	this.G = 66725.9;	// 万有引力常量
 }
 
 Universe.prototype.addObject = function(object) {

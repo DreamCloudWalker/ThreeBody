@@ -29,7 +29,16 @@ function Aster(scene, config) {
     this.mMesh.position.set(config.pos.x, config.pos.y, config.pos.z);
     this.mMesh.radius = config.radius;
     this.mMesh.name = name;
-    this.debugLogCnt = 10
+
+    // assist
+    this.mTrack = new THREE.Geometry();
+    // this.mTrack.vertices.push(this.mMesh.position.clone());
+    // this.mTrack.vertices.push(new THREE.Vector3(this.mMesh.position.x + 100, this.mMesh.position.y + 1200, this.mMesh.position.z + 300));
+    // this.mTrack.vertices.push(new THREE.Vector3(this.mMesh.position.x + 300, this.mMesh.position.y + 500, this.mMesh.position.z + 1000));
+    this.mTrackLineMaterial = new THREE.LineBasicMaterial({color: config.trackColor, linewidth: 5});
+    this.mTrackLine = new THREE.Line(this.mTrack, this.mTrackLineMaterial);
+    // debug
+    this.debugLogCnt = 10;
 }
 
 Aster.prototype.gravityForce = function(asters, debug = false) {
@@ -63,12 +72,22 @@ Aster.prototype.logVector3 = function(vector) {
 	return "vec[x] = " + vector.x + ", vec[y] = " + vector.y + ", vec[z] = " + vector.z;
 }
 
+Aster.prototype.showTrack = function() {
+    if (this.mTrack.vertices.length > 100) {
+        this.mTrack.vertices.pop(); // 尾部删除
+    }
+    this.mTrack.vertices.unshift(this.mMesh.position.clone());  // THREE.Vector3,头部添加
+    this.mTrack.verticesNeedUpdate = true;
+    this.mScene.addElement(this.mTrackLine);
+}
+
 Aster.prototype.update = function() {
     this.gravityForce(mUniverse.mObjects);
     if (undefined != this.mPointLight) 
         this.mPointLight.position.copy(this.mMesh.position);
     if (undefined != this.mLightSprite) 
         this.mLightSprite.position.copy(this.mMesh.position);
+    this.showTrack();
 }
 
 /**

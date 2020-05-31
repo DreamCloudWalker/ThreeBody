@@ -24,10 +24,13 @@ function onKeyPress(event) {
             break;
     }
 
-    if (mShowAssist) {
-        document.getElementById('canvas-frame').appendChild(mGLScene.mStats.domElement);
-    } else {
-        document.getElementById('canvas-frame').removeChild(mGLScene.mStats.domElement);
+    if (null != mGLScene) {
+        if (mShowAssist) {
+            document.getElementById('canvas-frame').appendChild(mGLScene.mStats.domElement);
+        } else {
+            document.getElementById('canvas-frame').removeChild(mGLScene.mStats.domElement);
+        }
+        mGLScene.updateAssistVisible(mShowAssist);
     }
 }
 
