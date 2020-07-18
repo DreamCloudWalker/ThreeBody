@@ -1,12 +1,21 @@
-function Aster(scene, config) {
+function Aster(scene, config, endCallback) {
     this.mScene = scene;
     this.mRadius = config.radius;
     this.mLoader = new THREE.TextureLoader();
     this.mType = config.type;
     this.mLightSprite = undefined;
     this.mPointLight = undefined;
+    this.mFirst = false;
     if (this.mType == AsterType.STAR) {
-        this.mMeshMaterial = new THREE.MeshLambertMaterial({map: this.mLoader.load(config.texPath), emissive: 0x888833});
+        // this.mMeshMaterial = new THREE.MeshLambertMaterial({map: this.mLoader.load(config.texPath), emissive: 0x888833});
+        this.mMeshMaterial = new THREE.MeshPhysicalMaterial({   // PBR Material
+            map: this.mLoader.load(config.texPath), 
+            alphaMap: this.mLoader.load(config.transPath),
+            emissive: 0x888833, 
+            emissiveMap: this.mLoader.load(config.emmTexPath), 
+            metalness: 0.1, 
+            roughness: 0.8
+        });
         this.mLightSprite = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(this.generateSprite("255, 255, 255")),
             blending: THREE.AdditiveBlending}));
         this.mLightSprite.scale.x = this.mLightSprite.scale.y = this.mLightSprite.scale.z = this.mRadius * 4;
@@ -26,9 +35,17 @@ function Aster(scene, config) {
 		this.mMaterial,
 		mass = config.mass
     );
+    this.mMesh.name = this.mType;
     this.mMesh.position.set(config.pos.x, config.pos.y, config.pos.z);
     this.mMesh.radius = config.radius;
-    this.mMesh.name = name;
+    this.mMesh.addEventListener('collision', function(otherObject, relativeVelocity, relativeRotation, contactNormal) {
+        console.log('Stars collision happens, current type is :' + this.name + ', otherObject type is ' + otherObject.name);
+        if (this.name != otherObject.name) {
+            endCallback(DisasterType.STAR_EAT_EARTH);
+        } else if (this.name == otherObject.name && this.name == '0') {
+            endCallback(DisasterType.STAR_COLLISION);
+        }
+    });
 
     // assist
     this.mTrack = new THREE.Geometry();
@@ -37,8 +54,6 @@ function Aster(scene, config) {
     // this.mTrack.vertices.push(new THREE.Vector3(this.mMesh.position.x + 300, this.mMesh.position.y + 500, this.mMesh.position.z + 1000));
     this.mTrackLineMaterial = new THREE.LineBasicMaterial({color: config.trackColor, linewidth: 5});
     this.mTrackLine = new THREE.Line(this.mTrack, this.mTrackLineMaterial);
-    // debug
-    this.debugLogCnt = 10;
 }
 
 Aster.prototype.gravityForce = function(asters, debug = false) {
@@ -55,17 +70,16 @@ Aster.prototype.gravityForce = function(asters, debug = false) {
                     .divideScalar(Math.pow(distance,2));
         force.add(oneForce);
         
-        if (debug && this.debugLogCnt > 0) {
+        if (debug) {
             console.log("oneForce:" + this.logVector3(oneForce));
             console.log("force:" + this.logVector3(force));
         }
     }
-    if (debug && this.debugLogCnt > 0) {
+    if (debug) {
         console.log("all force:" + this.logVector3(force));
         console.log("position:" + this.logVector3(this.mMesh.position));
     }
     this.mMesh.applyForce(force, new THREE.Vector3(0,0,0));
-    this.debugLogCnt--;
 }
 
 Aster.prototype.logVector3 = function(vector) {
@@ -78,11 +92,14 @@ Aster.prototype.showTrack = function() {
     }
     this.mTrack.vertices.unshift(this.mMesh.position.clone());  // THREE.Vector3,头部添加
     this.mTrack.verticesNeedUpdate = true;
-    this.mScene.addElement(this.mTrackLine);
+    if (!this.mFirst) {
+        this.mScene.addElement(this.mTrackLine);
+        this.mFirst = true;
+    }
 }
 
-Aster.prototype.update = function() {
-    this.gravityForce(mUniverse.mObjects);
+Aster.prototype.update = function(debug) {
+    this.gravityForce(mUniverse.mObjects, debug);
     if (undefined != this.mPointLight) 
         this.mPointLight.position.copy(this.mMesh.position);
     if (undefined != this.mLightSprite) 
